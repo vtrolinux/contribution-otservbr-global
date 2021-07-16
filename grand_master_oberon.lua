@@ -1,4 +1,4 @@
---[[ author vtrolinux(nox) ]]--
+--[[updated by nox]]
 local asking = {
 	[1] = {msg = "You appear like a worm among men!"},
 	[2] = {msg = "The world will suffer for its iddle laziness!"},
@@ -10,7 +10,6 @@ local asking = {
 	[8] = {msg = "I lead the most honourable and formidable following of knights!"},
 	[9] = {msg = "ULTAH SALID'AR, ESDO LO!"},
 }
-
 local responses = {
 	[1] = {msg = "How appropriate, you look like something worms already got the better of!"},
 	[2] = {msg = "Are you ever going to fight or do you prefer talking!"},
@@ -22,7 +21,6 @@ local responses = {
 	[8] = {msg = "Then why are we fighting alone right now?"},
 	[9] = {msg = "SEHWO ASIMO, TOLIDO ESD!"},
 }
-
 local config = {
 	storage = {
 		asking = 1,
@@ -54,7 +52,7 @@ local function sendAsking(monster)
 	if monster:getStorageValue(config.storage.life) > 1 then
 		local random = math.random(#asking)	
 		monster:say(asking[random].msg, TALKTYPE_MONSTER_SAY)
-		monster:setStorageValue(config.storage.asking, random)
+		monster:setStorageValue(config.storage.asking, random)       
 	else
 		monster:say(asking[1].msg, TALKTYPE_MONSTER_SAY)
 	end
@@ -64,11 +62,18 @@ end
 
 local immunity = CreatureEvent("OberonImmunity")
 
+function immunity.onHealthChange(creature, attacker, primaryDamage, primaryType, secondaryDamage, secondaryType, origin)
+    print('immunity on thealthchange AQUI')
+	if creature:isMonster() then
+		creature:getPosition():sendMagicEffect(CONST_ME_HOLYAREA)
+	end
+	return true
+end
+
 immunity:register()
 
 local mType = Game.createMonsterType("Grand Master Oberon")
 local monster = {}
-
 monster.description = "Grand Master Oberon"
 monster.experience = 20000
 monster.outfit = {
@@ -80,7 +85,6 @@ monster.outfit = {
 	lookAddons = 1,
 	lookMount = 0
 }
-
 monster.health = 30000
 monster.maxHealth = 30000
 monster.race = "blood"
@@ -88,16 +92,13 @@ monster.corpse = 33368
 monster.speed = 230
 monster.manaCost = 0
 monster.maxSummons = 0
-
 monster.changeTarget = {
 	interval = 4000,
 	chance = 10
 }
-
 monster.strategiesTarget = {
 	nearest = 100,
 }
-
 monster.flags = {
 	summonable = false,
 	attackable = true,
@@ -118,17 +119,14 @@ monster.flags = {
 	canWalkOnPoison = true,
 	pet = false
 }
-
 monster.light = {
 	level = 0,
 	color = 0
 }
-
 monster.voices = {
 	interval = 5000,
 	chance = 10,
 }
-
 monster.loot = {
 	{id = 2230, chance = 30000, maxCount = 1}, 
 	{name = "brass shield", chance = 30000, maxCount = 1},
@@ -147,20 +145,17 @@ monster.loot = {
 	{name = "falcon greaves", chance = 200, maxCount = 1},
 	{name = "falcon plate", chance = 200, maxCount = 1},
 }
-
 monster.attacks = {
 	{name ="melee", interval = 2000, chance = 100, minDamage = 0, maxDamage = -1200},
 	{name ="combat", interval = 6000, chance = 80, type = COMBAT_HOLYDAMAGE, minDamage = -1000, maxDamage = -2250, length = 8, spread = 3, effect = CONST_ME_HOLYAREA, target = false},
 	{name ="combat", interval = 1000, chance = 20, type = COMBAT_EARTHDAMAGE, minDamage = -820, maxDamage = -1450, radius = 5, effect = CONST_ME_HITAREA, target = false},
 	{name ="combat", interval = 2000, chance = 20, type = COMBAT_DEATHDAMAGE, minDamage = -860, maxDamage = -1500, range = 7, shootEffect = CONST_ANI_SUDDENDEATH, effect = CONST_ME_MORTAREA, target = false}
 }
-
 monster.defenses = {
 	defense = 60,
 	armor = 82,
 	{name ="speed", interval = 1000, chance = 10, speedChange = 180, effect = CONST_ME_POFF, target = false, duration = 4000}
 }
-
 monster.elements = {
 	{type = COMBAT_PHYSICALDAMAGE, percent = 10},
 	{type = COMBAT_ENERGYDAMAGE, percent = 0},
@@ -173,7 +168,6 @@ monster.elements = {
 	{type = COMBAT_HOLYDAMAGE , percent = 0},
 	{type = COMBAT_DEATHDAMAGE , percent = 50}
 }
-
 monster.immunities = {
 	{type = "paralyze", condition = true},
 	{type = "outfit", condition = true},
@@ -181,7 +175,6 @@ monster.immunities = {
 	{type = "bleed", condition = false}
 }
 local controleTempo = 0
-
 mType.onThink = function(monster, interval)
 	if monster:getStorageValue(config.storage.statusImortal) == true then					
 		controleTempo = controleTempo + interval
@@ -215,6 +208,10 @@ mType.onSay = function(monster, creature, type, message)
 				monster:setStorageValue(config.storage.life, storage)
 			end
 		end
+        print('bosslife VAI: ',monster:getStorageValue(config.storage.life))
+        if monster:getStorageValue(config.storage.life) == 4 then
+            monster:setReward(true)
+        end
 	end
 end
 
@@ -223,9 +220,11 @@ mType.onAppear = function(monster, creature)
 		monster:setStorageValue(config.storage.asking, 1)
 		monster:setStorageValue(config.storage.life, 1)
 	end
-	if  monster:getType():isRewardBoss() then
+	--[[if  monster:getType():isRewardBoss() then
 		monster:setReward(true)
-	end
+	end ]]
+    
+    
 end
 
 mType.onDisappear = function(monster, creature)	
