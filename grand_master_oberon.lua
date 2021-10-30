@@ -1,4 +1,3 @@
---[[updated by nox]]
 local asking = {
 	[1] = {msg = "You appear like a worm among men!"},
 	[2] = {msg = "The world will suffer for its iddle laziness!"},
@@ -10,6 +9,7 @@ local asking = {
 	[8] = {msg = "I lead the most honourable and formidable following of knights!"},
 	[9] = {msg = "ULTAH SALID'AR, ESDO LO!"},
 }
+
 local responses = {
 	[1] = {msg = "How appropriate, you look like something worms already got the better of!"},
 	[2] = {msg = "Are you ever going to fight or do you prefer talking!"},
@@ -52,7 +52,7 @@ local function sendAsking(monster)
 	if monster:getStorageValue(config.storage.life) > 1 then
 		local random = math.random(#asking)	
 		monster:say(asking[random].msg, TALKTYPE_MONSTER_SAY)
-		monster:setStorageValue(config.storage.asking, random)       
+		monster:setStorageValue(config.storage.asking, random)
 	else
 		monster:say(asking[1].msg, TALKTYPE_MONSTER_SAY)
 	end
@@ -61,14 +61,6 @@ local function sendAsking(monster)
 end
 
 local immunity = CreatureEvent("OberonImmunity")
-
-function immunity.onHealthChange(creature, attacker, primaryDamage, primaryType, secondaryDamage, secondaryType, origin)
-    print('immunity on thealthchange AQUI')
-	if creature:isMonster() then
-		creature:getPosition():sendMagicEffect(CONST_ME_HOLYAREA)
-	end
-	return true
-end
 
 immunity:register()
 
@@ -99,6 +91,7 @@ monster.changeTarget = {
 monster.strategiesTarget = {
 	nearest = 100,
 }
+
 monster.flags = {
 	summonable = false,
 	attackable = true,
@@ -117,7 +110,8 @@ monster.flags = {
 	canWalkOnEnergy = true,
 	canWalkOnFire = true,
 	canWalkOnPoison = true,
-	pet = false
+	pet = false,
+	rewardBoss = true
 }
 monster.light = {
 	level = 0,
@@ -168,6 +162,7 @@ monster.elements = {
 	{type = COMBAT_HOLYDAMAGE , percent = 0},
 	{type = COMBAT_DEATHDAMAGE , percent = 50}
 }
+
 monster.immunities = {
 	{type = "paralyze", condition = true},
 	{type = "outfit", condition = true},
@@ -208,10 +203,6 @@ mType.onSay = function(monster, creature, type, message)
 				monster:setStorageValue(config.storage.life, storage)
 			end
 		end
-        print('bosslife VAI: ',monster:getStorageValue(config.storage.life))
-        if monster:getStorageValue(config.storage.life) == 4 then
-            monster:setReward(true)
-        end
 	end
 end
 
@@ -220,11 +211,10 @@ mType.onAppear = function(monster, creature)
 		monster:setStorageValue(config.storage.asking, 1)
 		monster:setStorageValue(config.storage.life, 1)
 	end
-	--[[if  monster:getType():isRewardBoss() then
+	if  monster:getType():isRewardBoss() then
+		print('setreward modificado')
 		monster:setReward(true)
-	end ]]
-    
-    
+	end
 end
 
 mType.onDisappear = function(monster, creature)	
