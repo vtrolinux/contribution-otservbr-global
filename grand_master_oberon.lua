@@ -9,7 +9,6 @@ local asking = {
 	[8] = {msg = "I lead the most honourable and formidable following of knights!"},
 	[9] = {msg = "ULTAH SALID'AR, ESDO LO!"},
 }
-
 local responses = {
 	[1] = {msg = "How appropriate, you look like something worms already got the better of!"},
 	[2] = {msg = "Are you ever going to fight or do you prefer talking!"},
@@ -52,7 +51,7 @@ local function sendAsking(monster)
 	if monster:getStorageValue(config.storage.life) > 1 then
 		local random = math.random(#asking)	
 		monster:say(asking[random].msg, TALKTYPE_MONSTER_SAY)
-		monster:setStorageValue(config.storage.asking, random)
+		monster:setStorageValue(config.storage.asking, random)       
 	else
 		monster:say(asking[1].msg, TALKTYPE_MONSTER_SAY)
 	end
@@ -61,6 +60,13 @@ local function sendAsking(monster)
 end
 
 local immunity = CreatureEvent("OberonImmunity")
+
+function immunity.onHealthChange(creature, attacker, primaryDamage, primaryType, secondaryDamage, secondaryType, origin)
+	if creature:isMonster() then
+		creature:getPosition():sendMagicEffect(CONST_ME_HOLYAREA)
+	end
+	return true
+end
 
 immunity:register()
 
@@ -91,7 +97,6 @@ monster.changeTarget = {
 monster.strategiesTarget = {
 	nearest = 100,
 }
-
 monster.flags = {
 	summonable = false,
 	attackable = true,
@@ -110,8 +115,7 @@ monster.flags = {
 	canWalkOnEnergy = true,
 	canWalkOnFire = true,
 	canWalkOnPoison = true,
-	pet = false,
-	rewardBoss = true
+	pet = false
 }
 monster.light = {
 	level = 0,
@@ -162,33 +166,32 @@ monster.elements = {
 	{type = COMBAT_HOLYDAMAGE , percent = 0},
 	{type = COMBAT_DEATHDAMAGE , percent = 50}
 }
-
 monster.immunities = {
 	{type = "paralyze", condition = true},
 	{type = "outfit", condition = true},
 	{type = "invisible", condition = true},
 	{type = "bleed", condition = false}
 }
-local controleTempo = 0
+local timeControl = 0
 mType.onThink = function(monster, interval)
 	if monster:getStorageValue(config.storage.statusImortal) == true then					
-		controleTempo = controleTempo + interval
-		if controleTempo >= 10000 then
+		timeControl = timeControl + interval
+		if timeControl >= 10000 then
 			monster:say(asking[monster:getStorageValue(config.storage.asking)].msg, TALKTYPE_MONSTER_SAY)
-			controleTempo = 0
+			timeControl = 0
 		end
 	end
 	if monster:getStorageValue(config.storage.life) <= config.amount_life then
 		local percentageHealth = (monster:getHealth()*100)/monster:getMaxHealth()
 		if percentageHealth <= 20 then
 			sendAsking(monster)
-			controleTempo = 0
+			timeControl = 0
 		end
 	end
 end
 
 mType.onSay = function(monster, creature, type, message)
-	if (type ~= 36) and (type ~= 52) then
+	if (type ~= 36) and (type ~= 52) and (type ~= 9) then
 		if monster:getStorageValue(config.storage.statusImortal) == true then
 		local storage = monster:getStorageValue(config.storage.life)	
 			if message:lower() == responses[monster:getStorageValue(config.storage.asking)].msg:lower()	then
@@ -203,6 +206,9 @@ mType.onSay = function(monster, creature, type, message)
 				monster:setStorageValue(config.storage.life, storage)
 			end
 		end
+        if monster:getStorageValue(config.storage.life) == 4 then
+            monster:setReward(true)
+        end
 	end
 end
 
@@ -210,11 +216,7 @@ mType.onAppear = function(monster, creature)
 	if monster:getId() == creature:getId() then
 		monster:setStorageValue(config.storage.asking, 1)
 		monster:setStorageValue(config.storage.life, 1)
-	end
-	if  monster:getType():isRewardBoss() then
-		print('setreward modificado')
-		monster:setReward(true)
-	end
+	end   
 end
 
 mType.onDisappear = function(monster, creature)	
